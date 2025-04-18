@@ -1,4 +1,4 @@
-// main.js
+// main_combiner.js
 
 const { main_vidgen } = require('./main_vidgen');
 const { exec } = require('child_process');
@@ -6,6 +6,24 @@ const util = require('util');
 const path = require('path');
 const fs = require('fs');
 const execPromise = util.promisify(exec);
+
+const rawArg = process.argv[2];
+if (!rawArg) {
+  console.error('Usage: node main_combiner.js <YouTube Video URL or ID>');
+  process.exit(1);
+}
+
+let link;
+try {
+  if (/^https?:\/\//i.test(rawArg)) {
+    const urlObj = new URL(rawArg);
+    link = urlObj.searchParams.get('v') || urlObj.pathname.split('/').filter(Boolean).pop();
+  } else {
+    link = rawArg;
+  }
+} catch (err) {
+  link = rawArg;
+}
 
 const dopamineVideoPath = 'C:\\Users\\Moussa\\Downloads\\Youtube_vid-main\\Youtube_vid-main\\src\\DopamineVid\\video.mp4';
 const outputDir = path.join(__dirname, 'outputvid');
@@ -27,7 +45,9 @@ async function removeFileIfExists(filePath) {
 
 async function getVideoDuration(filePath) {
   try {
-    const { stdout } = await execPromise(`ffprobe -v error -show_entries format=duration -of csv="p=0" "${filePath}"`);
+    const { stdout } = await execPromise(
+      `ffprobe -v error -show_entries format=duration -of csv="p=0" "${filePath}"`
+    );
     return parseFloat(stdout);
   } catch (err) {
     console.error(`Fout bij ophalen duur voor ${filePath}:`, err.message);
@@ -58,42 +78,37 @@ async function getRandomClipFromDopamine(duration, outputFileName) {
 }
 
 async function mergeClips(clip1Path, clip2Path, outputFileName) {
-    const outputPath = path.join(outputDir, outputFileName);
-    await removeFileIfExists(outputPath);
-  
-    const outputWidth = 1080;
-    const outputHeight = 1920;
-  
-    const command = `ffmpeg -i "${clip1Path}" -i "${clip2Path}" -filter_complex ` +
-      `"[0:v]scale=1080:1280:force_original_aspect_ratio=increase,crop=1080:1280,` +
-      `setpts=PTS-STARTPTS[top]; ` +
-      `[1:v]scale=1080:640:force_original_aspect_ratio=increase,crop=1080:640,` +
-      `setpts=PTS-STARTPTS[bottom]; ` +
-      `[top][bottom]vstack=inputs=2[v]; ` +
-      `[0:a]aresample=async=000,asetpts=PTS-STARTPTS,adelay=000|000[a0]; ` + // ⭐ async=500 & adelay=300
-      `[1:a]aresample=async=000,asetpts=PTS-STARTPTS[a1]; ` + // ⭐ async=500
-      `[a0][a1]amix=inputs=2:duration=longest:dropout_transition=0[a]" ` + // ⭐ duration=longest
-      `-map "[v]" -map "[a]" ` +
-      `-c:v libx264 -preset veryfast -crf 23 -r 30 ` +
-      `-c:a aac -b:a 192k ` + // ⭐ Verwijder -shortest
-      `-fflags +genpts -movflags +faststart "${outputPath}" -y`;
-  
-    console.log(`Creating Shorts video in ${outputPath}`);
-    try {
-      await execPromise(command);
-      console.log(`Video successfully created: ${outputPath}`);
-    } catch (err) {
-      console.error("Error merging clips:", err.message);
-      throw err;
-    }
-  }
+  const outputPath = path.join(outputDir, outputFileName);
+  await removeFileIfExists(outputPath);
 
-  
+  const command = `ffmpeg -i "${clip1Path}" -i "${clip2Path}" -filter_complex ` +
+    `"[0:v]scale=1080:1280:force_original_aspect_ratio=increase,crop=1080:1280,` +
+    `setpts=PTS-STARTPTS[top]; ` +
+    `[1:v]scale=1080:640:force_original_aspect_ratio=increase,crop=1080:640,` +
+    `setpts=PTS-STARTPTS[bottom]; ` +
+    `[top][bottom]vstack=inputs=2[v]; ` +
+    `[0:a]aresample=async=000,asetpts=PTS-STARTPTS,adelay=000|000[a0]; ` +
+    `[1:a]aresample=async=000,asetpts=PTS-STARTPTS[a1]; ` +
+    `[a0][a1]amix=inputs=2:duration=longest:dropout_transition=0[a]" ` +
+    `-map "[v]" -map "[a]" ` +
+    `-c:v libx264 -preset veryfast -crf 23 -r 30 ` +
+    `-c:a aac -b:a 192k ` +
+    `-fflags +genpts -movflags +faststart "${outputPath}" -y`;
+
+  console.log(`Creating Shorts video in ${outputPath}`);
+  try {
+    await execPromise(command);
+    console.log(`Video successfully created: ${outputPath}`);
+  } catch (err) {
+    console.error("Error merging clips:", err.message);
+    throw err;
+  }
+}
+
 async function processClips() {
   const tempFiles = [];
 
   try {
-    const link = 'N9Ff6WBP-2A';
     const result = await main_vidgen(link);
     tempFiles.push(result.filePath);
     const clipNames = result.clips;
