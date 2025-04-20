@@ -1,113 +1,92 @@
 import argparse
-import re
 import os
+import re
+from typing import List
+
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-def parse_srt(srt_path):
-    """Parse an SRT file and extract subtitle text."""
-    
-    with open(srt_path, 'r', encoding='utf-8') as file:
-        content = file.read()
-    
-    # Pattern to extract subtitle text (ignoring timecodes and index numbers)
-    # This handles both Windows (CRLF) and Unix (LF) line endings
-    pattern = r'\d+\s+\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}\s+(.*?)(?=\s*\n\s*\n|\s*$)'
-    
-    # Extract all subtitle text sections
-    matches = re.findall(pattern, content, re.DOTALL)
-    
-    # Clean up subtitle text (remove HTML tags and join)
-    clean_text = []
-    for match in matches:
-        # Remove HTML tags if any
-        text = re.sub(r'<[^>]+>', '', match)
-        # Replace line breaks with spaces
-        text = re.sub(r'\n', ' ', text)
-        # Remove multiple spaces
-        text = re.sub(r'\s+', ' ', text)
-        clean_text.append(text.strip())
-    
-    return " ".join(clean_text)
 
-def generate_description_with_hashtags(subtitle_text, api_key):
-    """Generate a description and hashtags based on subtitle text using Gemini API."""
-    
-    # Configure the Gemini API
+# ────────────────────────── Helpers ──────────────────────────────
+def parse_srt(srt_path: str) -> str:
+    with open(srt_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    pattern = r"\d+\s+\d{2}:\d{2}:\d{2},\d{3} --> .*?\n(.*?)(?=\n\n|\Z)"
+    blocks: List[str] = re.findall(pattern, content, flags=re.DOTALL)
+
+    cleaned: List[str] = []
+    for block in blocks:
+        text = re.sub(r"<[^>]+>", "", block)   
+        text = re.sub(r"\s+", " ", text).strip() 
+        cleaned.append(text)
+
+    return " ".join(cleaned)
+
+
+def _configure(api_key: str) -> genai.GenerativeModel:
     genai.configure(api_key=api_key)
-    
-    try:
-        # Use the specified model - gemini-2.0-flash
-        model = genai.GenerativeModel('gemini-2.0-flash')
-        
-        # Define the prompt
-        prompt = f"""
-        Based on the following subtitles from a video, generate:
-        
-        1. A concise and descriptive summary that could serve as a description for the video. 
-           Focus on the main topics, themes, and content of the video. 
-           The description should be 2-3 paragraphs long.
-        
-        2. A list of 10 relevant hashtags related to the video content. These should be presented 
-           as a single line of hashtags at the end of the description, each starting with #.
-        
-        SUBTITLES:
-        {subtitle_text}
-        
-        Format your response with the description first, followed by a blank line, and then the hashtags.
-        """
-        
-        # Generate the description with hashtags
-        response = model.generate_content(prompt)
-        
-        return response.text
-        
-    except Exception as e:
-        print(f"Error during API call: {str(e)}")
-        print("\nTroubleshooting:")
-        print("1. Check if your API key is correct")
-        print("2. Make sure you have access to the gemini-2.0-flash model")
-        print("3. Check your internet connection")
-        raise
+    return genai.GenerativeModel("gemini-2.0-pro")
 
-def main():
-    parser = argparse.ArgumentParser(description='Generate video descriptions and hashtags from SRT subtitle files using Gemini API')
-    parser.add_argument('srt_file', type=str, help='Path to the .srt subtitle file')
-    parser.add_argument('--output', '-o', type=str, help='Path to save the generated description (optional)')
-    parser.add_argument('--api_key', '-k', type=str, help='Gemini API key (optional if set in .env file)')
-    
+
+# ────────────────────────── Generators ───────────────────────────
+def generate_title(transcript: str, api_key: str) -> str:
+    model = _configure(api_key)
+    prompt = (
+        "Craft a punchy, curiosity‑driven video title in NO MORE THAN 12 words. "
+        "Front‑load strong keywords for SEO. "
+        "Avoid hashtags, emojis, and excessive punctuation. "
+        "Use a bit of click‑bait. "
+        "Transcript excerpt:\n"
+        f"{transcript}"
+    )
+    response = model.generate_content(prompt)
+    return response.text.strip().replace("\n", " ")
+
+
+def generate_description(transcript: str, api_key: str) -> str:
+
+    model = _configure(api_key)
+    prompt = (
+        "Summarize the following video transcript into 2–3 concise paragraphs. "
+        "Highlight the main topics, value for the viewer, and keep the tone engaging yet informative. "
+        "DO NOT include hashtags, timestamps, or bullet points. "
+        "Transcript:\n"
+        f"{transcript}"
+    )
+    response = model.generate_content(prompt)
+    return response.text.strip()
+
+
+# ──────────────────────────── CLI ────────────────────────────────
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Generate a video TITLE and/or DESCRIPTION from an .SRT file via Gemini"
+    )
+    parser.add_argument("srt_file", help=".srt subtitle file to analyse")
+    parser.add_argument(
+        "--api_key", "-k", help="Gemini API key (overrides GEMINI_API_KEY in .env)"
+    )
+    parser.add_argument(
+        "--only",
+        choices=["title", "description"],
+        default="title",
+        help="Generate only the title or only the description (default: title)",
+    )
     args = parser.parse_args()
-    
-    # Load API key from .env file if not provided as argument
+
     load_dotenv()
-    api_key = args.api_key or os.getenv('GEMINI_API_KEY')
-    
+    api_key = args.api_key or os.getenv("GEMINI_API_KEY")
     if not api_key:
-        print("Error: Gemini API key is required. Provide it with --api_key or set GEMINI_API_KEY in .env file.")
-        return
-    
-    # Parse the SRT file
-    try:
-        subtitle_text = parse_srt(args.srt_file)
-        print(f"Successfully extracted text from {args.srt_file}")
-        
-        # Check if we have enough content to work with
-        if len(subtitle_text.split()) < 10:
-            print("Warning: Very little text found in subtitles. Results may not be optimal.")
-        
-        # Generate description with hashtags
-        result = generate_description_with_hashtags(subtitle_text, api_key)
-        print("\nGenerated Description with Hashtags:")
-        print(result)
-        
-        # Save to file if output path provided
-        if args.output:
-            with open(args.output, 'w', encoding='utf-8') as f:
-                f.write(result)
-            print(f"\nDescription and hashtags saved to {args.output}")
-            
-    except Exception as e:
-        print(f"Error: {str(e)}")
+        raise SystemExit("Gemini API key missing (use --api_key or set GEMINI_API_KEY in .env)")
+
+    transcript = parse_srt(args.srt_file)
+
+    if args.only == "title":
+        print(generate_title(transcript, api_key))
+    else:
+        print(generate_description(transcript, api_key))
+
 
 if __name__ == "__main__":
     main()

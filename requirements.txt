@@ -1,0 +1,6 @@
+moviepy
+whisper
+google-generativeai
+openpyxl
+python-dotenv
+pytz
