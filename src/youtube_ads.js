@@ -1,9 +1,7 @@
 async function waitForAdSkip(videoPage, maxWaitTime = 15000) {
   const startTime = Date.now()
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
-    // Check if the maximum waiting time has been exceeded
     if (Date.now() - startTime > maxWaitTime) {
       console.log(
         "Maximum wait time exceeded. Proceeding with non-skippable ad or no ad.",
@@ -26,7 +24,6 @@ async function waitForAdSkip(videoPage, maxWaitTime = 15000) {
           break
         }
       }
-      // Shorter wait before re-checking for the skip button
       await videoPage.waitForTimeout(500)
     } catch (error) {
       console.error("Error during ad skip check:", error)

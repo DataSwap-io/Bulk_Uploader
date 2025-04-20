@@ -5,7 +5,6 @@ function extractPointsFromPath(pathData) {
   let currentX = 0,
     currentY = 0
 
-  // First pass: Calculate maxY for M and L commands
   for (const pair of commandDataPairs) {
     const command = pair[0]
     const dataNumbers = pair
@@ -14,7 +13,6 @@ function extractPointsFromPath(pathData) {
       .split(/[\s,]+/)
       .map(parseFloat)
 
-    // Skip if no numbers are present
     if (dataNumbers.length === 0) continue
 
     if (command === "M" || command === "L") {
@@ -24,7 +22,6 @@ function extractPointsFromPath(pathData) {
     }
   }
 
-  // Second pass: Calculate points with inverted Y
   for (const pair of commandDataPairs) {
     const command = pair[0]
     const dataNumbers = pair
@@ -33,7 +30,6 @@ function extractPointsFromPath(pathData) {
       .split(/[\s,]+/)
       .map(parseFloat)
 
-    // Skip if no numbers are present
     if (dataNumbers.length === 0) continue
 
     switch (command) {

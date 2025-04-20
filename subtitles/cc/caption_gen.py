@@ -12,20 +12,15 @@ subtitle_path = "output.srt"
 
 video_path = sys.argv[1]
 
-# Step 1: Extract audio from video
 print("Extracting audio...")
 video = VideoFileClip(video_path)
 video.audio.write_audiofile(audio_path)
 
-# Step 2: Load Whisper model
 print("Loading Whisper model...")
-model = whisper.load_model("base")  # Or "small", "medium", "large"
-
-# Step 3: Transcribe audio
+model = whisper.load_model("base")
 print("Transcribing...")
 result = model.transcribe(audio_path)
 
-# Helper function: format seconds to SRT timestamp
 def format_timestamp(seconds):
     td = datetime.timedelta(seconds=seconds)
     total_seconds = int(td.total_seconds())
@@ -35,7 +30,6 @@ def format_timestamp(seconds):
     milliseconds = int((td.total_seconds() - total_seconds) * 1000)
     return f"{hours:02}:{minutes:02}:{secs:02},{milliseconds:03}"
 
-# Step 4: Write SRT with max 3 words per subtitle
 print("Writing subtitles...")
 with open(subtitle_path, "w", encoding="utf-8") as srt_file:
     subtitle_num = 1
@@ -51,7 +45,6 @@ with open(subtitle_path, "w", encoding="utf-8") as srt_file:
         chunks = [words[i:i+chunk_size] for i in range(0, len(words), chunk_size)]
         chunk_count = len(chunks)
 
-        # Distribute timing proportionally
         for i, chunk in enumerate(chunks):
             chunk_text = ' '.join(chunk)
             chunk_start = start + (i / chunk_count) * duration

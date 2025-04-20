@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import itertools
 
-EU_TZ = "Europe/Amsterdam"          # of laat dit via pytz.timezone(EU_TZ) lopen
+EU_TZ = "Europe/Amsterdam"
 
 SCHEDULE = {
     "Instagram Reels": {0:["10:00","19:00"], 2:["11:00","20:00"], 4:["09:00","18:00"]},
