@@ -3,15 +3,12 @@ function getTopReplayedParts(data, parts) {
     return []
   }
 
-  // Sort the markers by intensityScoreNormalized in descending order
   const sortedMarkers = data.markers.sort(
     (a, b) => b.intensityScoreNormalized - a.intensityScoreNormalized,
   )
 
-  // Take the top 'parts' markers
   const topMarkers = sortedMarkers.slice(0, parts)
 
-  // Format the output
   return topMarkers.map((marker, index) => ({
     position: index + 1,
     start: Math.round(Number(marker.startMillis) / 1000),

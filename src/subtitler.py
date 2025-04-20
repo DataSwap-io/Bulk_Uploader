@@ -6,7 +6,6 @@ import os
 import argparse
 
 def setup_argparse():
-    """Set up command line argument parsing with helpful descriptions"""
     parser = argparse.ArgumentParser(description='Add subtitles to a video file.')
     parser.add_argument('input_video', help='Path to the input video file')
     parser.add_argument('subtitle_file', help='Path to the subtitle file (.srt format)')
@@ -22,7 +21,6 @@ def setup_argparse():
     return parser.parse_args()
 
 def configure_imagemagick():
-    """Configure ImageMagick path, trying common installation locations"""
     possible_paths = [
         r"C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe",  # Windows
         r"/usr/local/bin/convert",  # Mac/Linux
@@ -39,7 +37,6 @@ def configure_imagemagick():
     return False
 
 def subtitle_generator(txt, args):
-    """Create TextClip with the given text and style parameters"""
     font_path = f"fonts/{args.font}" if not os.path.exists(args.font) else args.font
     
     return TextClip(
@@ -50,7 +47,7 @@ def subtitle_generator(txt, args):
         stroke_color="black",
         stroke_width=3,
         method="caption",
-        size=(min(1020, int(video.w * 0.8)), None),  # Make width responsive to video size
+        size=(min(1020, int(video.w * 0.8)), None),
         align="center"
     )
 
@@ -59,7 +56,6 @@ def calculate_position(args, video_height):
     if args.position == 'bottom':
         return ('center', 'bottom')
     elif args.position == 'middle':
-        # Position subtitles in lower third of screen
         return ('center', video_height - int(video_height/2))
     elif args.position == 'custom' and args.custom_position is not None:
         return ('center', video_height - args.custom_position)
@@ -72,13 +68,10 @@ def generate_preview(generator_func, output_path="subtitle_preview.png"):
     print(f"Preview image saved to {output_path}")
 
 def main():
-    # Parse command line arguments
     args = setup_argparse()
     
-    # Configure ImageMagick
     configure_imagemagick()
     
-    # Load the video file
     global video
     try:
         video = VideoFileClip(args.input_video)
@@ -86,38 +79,31 @@ def main():
         print(f"Error loading video file: {e}")
         sys.exit(1)
     
-    # Create subtitle generator with user parameters
     generator = lambda txt: subtitle_generator(txt, args)
     
-    # Generate preview if requested
     if args.preview:
         generate_preview(generator)
         sys.exit(0)
     
-    # Load subtitles from file
     try:
         subtitles = SubtitlesClip(args.subtitle_file, generator)
     except Exception as e:
         print(f"Error loading subtitle file: {e}")
         sys.exit(1)
     
-    # Calculate subtitle position
     position = calculate_position(args, video.h)
     
-    # Create final video with subtitles
     final_video = CompositeVideoClip([
         video,
         subtitles.set_position(position)
     ])
     
-    # Determine output filename
     if args.output:
         output_file = args.output
     else:
         base_name = os.path.splitext(os.path.basename(args.input_video))[0]
         output_file = f"{base_name}_subtitled.mp4"
     
-    # Write the final video to a file
     print(f"Rendering video with subtitles to {output_file}...")
     final_video.write_videofile(output_file, codec='libx264', audio_codec='aac')
     print("Rendering complete!")

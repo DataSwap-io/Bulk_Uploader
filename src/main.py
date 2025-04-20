@@ -12,7 +12,7 @@ from schedule_utils import next_slots
 # ──────────────────────────── Config ─────────────────────────────
 output_dir = "outputvid"
 excel_path = Path("videouploader.xlsx")
-subtitle_dir = Path("C:/Users/thoma/Downloads/Bulk_Uploader - Copy/src/subtitles")
+subtitle_dir = Path("C:/Users/thoma/Downloads/Bulk_Uploader - Copy/src/subtitles") ######################AANPASSEN################
 youtube_tags = "#shorts #youtubeshorts #viral #trending"
 tiktok_tags  = "#fy #foryou #tiktok #viral #fyp"
 insta_tags   = "#fy #foryou #reels #viral #instareels"

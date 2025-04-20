@@ -17,10 +17,8 @@ if len(sys.argv) < 2:
 video_path = sys.argv[1]
 filename = sys.argv[2]
 
-#
-# PAS DEZE AAN
-#
-subtitle_path = f"C:\\Users\\thoma\\Downloads\\Bulk_Uploader - Copy\\src\\subtitles\\{filename}.srt"
+
+subtitle_path = f"C:\\Users\\thoma\\Downloads\\Bulk_Uploader - Copy\\src\\subtitles\\{filename}.srt" ######################AANPASSEN#############################
 
 # Step 1: Extract audio from video
 print("Extracting audio...")

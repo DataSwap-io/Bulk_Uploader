@@ -25,10 +25,7 @@ try {
   link = rawArg;
 }
 
-//
-// PAS DEZE AAN
-//
-const dopamineVideoPath = 'C:\\Users\\thoma\\Downloads\\Bulk_Uploader\\src\\DopamineVid\\video.mp4';
+const dopamineVideoPath = 'C:\\Users\\thoma\\Downloads\\Bulk_Uploader\\src\\DopamineVid\\video.mp4'; ///////////AANPASSEN
 
 const outputDir = path.join(__dirname, 'outputvid');
 if (!fs.existsSync(outputDir)) {

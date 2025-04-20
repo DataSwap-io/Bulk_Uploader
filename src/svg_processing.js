@@ -1,9 +1,3 @@
-/*
- * This script joins to SVG paths and returns ONE cleaned path data string.
- * It is written to work with paths obtained from YouTube heatmaps.
- * Writing this script was a nigthmare, but it works. I'm not going to touch it again. Ever.
- * Oh, hello there future me. I see you're trying to fix something. Good luck. REALLY. You'll need it.
- */
 
 function pathToCoordinates(pathData) {
   const commandRegex = /([a-zA-Z])([^a-zA-Z]*)/g
