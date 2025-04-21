@@ -12,7 +12,7 @@ from schedule_utils import next_slots
 # ──────────────────────────── Config ─────────────────────────────
 output_dir = "outputvid"
 excel_path = Path("videouploader.xlsx")
-subtitle_dir = Path("C:/Users/thoma/Downloads/Bulk_Uploader - Copy/src/subtitles") ######################AANPASSEN################
+subtitle_dir = Path("C:\\Users\\thoma\\OneDrive\\Documents\\code_projects\\git_proj\\Bulk_Uploader\\src\\subtitles") ######################AANPASSEN################
 youtube_tags = "#shorts #youtubeshorts #viral #trending"
 tiktok_tags  = "#fy #foryou #tiktok #viral #fyp"
 insta_tags   = "#fy #foryou #reels #viral #instareels"
@@ -75,6 +75,15 @@ for filename in os.listdir(output_dir):
     # Titel & beschrijving
     title = generate_title(subs, api_key)
     descr = generate_description(subs, api_key)
+
+    # Plak ondertiteling op de video
+    proc_captioning = subprocess.run(['python', 'subtitler.py',
+                                          str(file_path),
+                                          srt_path,
+                                         '-o', f'final\\{file_path.stem}_subtitled.mp4',
+                                         '--position', 'middle'],
+                                         capture_output=True, text=True)
+
 
     # Platform & planning
     platform, when_dt = next(slot_iter)

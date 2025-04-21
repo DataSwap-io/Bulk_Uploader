@@ -18,7 +18,7 @@ video_path = sys.argv[1]
 filename = sys.argv[2]
 
 
-subtitle_path = f"C:\\Users\\thoma\\Downloads\\Bulk_Uploader - Copy\\src\\subtitles\\{filename}.srt" ######################AANPASSEN#############################
+subtitle_path = f"C:\\Users\\thoma\\OneDrive\\Documents\\code_projects\\git_proj\\Bulk_Uploader\\src\\subtitles\\{filename}.srt" ######################AANPASSEN#############################
 
 # Step 1: Extract audio from video
 print("Extracting audio...")

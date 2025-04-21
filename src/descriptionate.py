@@ -26,7 +26,7 @@ def parse_srt(srt_path: str) -> str:
 
 def _configure(api_key: str) -> genai.GenerativeModel:
     genai.configure(api_key=api_key)
-    return genai.GenerativeModel("gemini-2.0-pro")
+    return genai.GenerativeModel("gemini-2.0-flash-lite")
 
 
 # ────────────────────────── Generators ───────────────────────────

@@ -25,7 +25,7 @@ try {
   link = rawArg;
 }
 
-const dopamineVideoPath = 'C:\\Users\\thoma\\Downloads\\Bulk_Uploader\\src\\DopamineVid\\video.mp4'; ///////////AANPASSEN
+const dopamineVideoPath = 'C:\\Users\\thoma\\OneDrive\\Documents\\code_projects\\git_proj\\Bulk_Uploader\\src\\DopamineVid\\video.mp4'; ///////////AANPASSEN
 
 const outputDir = path.join(__dirname, 'outputvid');
 if (!fs.existsSync(outputDir)) {
@@ -92,7 +92,7 @@ async function mergeClips(clip1Path, clip2Path, outputFileName) {
     `[1:a]aresample=async=000,asetpts=PTS-STARTPTS[a1]; ` +
     `[a0][a1]amix=inputs=2:duration=longest:dropout_transition=0[a]" ` +
     `-map "[v]" -map "[a]" ` +
-    `-c:v libx264 -preset veryfast -crf 23 -r 30 ` +
+    `-c:v libx264 -preset veryfast -crf 23 -r 5 ` +
     `-c:a aac -b:a 192k ` +
     `-fflags +genpts -movflags +faststart "${outputPath}" -y`;
 
